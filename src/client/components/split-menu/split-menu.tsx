@@ -110,7 +110,13 @@ export class SplitMenu extends React.Component<SplitMenuProps, SplitMenuState> {
   onSelectGranularity(granularity: Granularity): void {
     var { split } = this.state;
     var bucketAction = split.bucketAction as Granularity;
-    var newAction = granularity ? updateBucketSize(bucketAction, granularity) : null;
+    var newAction: Granularity = null;
+    if (!bucketAction) {
+      newAction = granularity;
+    } else {
+      newAction = granularity ? updateBucketSize(bucketAction, granularity) : null;
+    }
+
     this.setState({
       split: split.changeBucketAction(newAction)
     });
