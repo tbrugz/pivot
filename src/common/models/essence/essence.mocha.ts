@@ -293,9 +293,6 @@ describe('Essence', () => {
 
         var vis2 = Essence.getBestVisualization(MANIFESTS, DataCubeMock.twitter(), Splits.fromJS(['tweetLength'], { dimensions }), null, TOTALS_MANIFEST);
         expect(vis2.visualization.name).to.deep.equal("bar-chart");
-
-        var vis3 = Essence.getBestVisualization(MANIFESTS, DataCubeMock.twitter(), Splits.fromJS(['time'], { dimensions }), null, BAR_CHART_MANIFEST);
-        // expect(vis3.visualization.name).to.deep.equal("line-chart");
       });
     });
 
