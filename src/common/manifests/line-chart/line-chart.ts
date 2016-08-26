@@ -65,24 +65,25 @@ function adjustSingleSplit(splits: Splits, dataCube: DataCube, colors: Colors): 
   };
 }
 
-function adjustTwoSplits(bucketedSplit: SplitCombine, colorSplit: SplitCombine, dataCube: DataCube, colors: Colors): any {
-  var bucketedDimension = bucketedSplit.getDimension(dataCube.dimensions);
+
+function handleTwoSplits(primarySplit: SplitCombine, colorSplit: SplitCombine, dataCube: DataCube, colors: Colors): Resolve {
+  var primaryDimension = primarySplit.getDimension(dataCube.dimensions);
   let autoChanged = false;
 
   var sortAction: SortAction = new SortAction({
-    expression: $(bucketedDimension.name),
+    expression: $(primaryDimension.name),
     direction: SortAction.ASCENDING
   });
 
   // Fix time sort
-  if (!sortAction.equals(bucketedSplit.sortAction)) {
-    bucketedSplit = bucketedSplit.changeSortAction(sortAction);
+  if (!sortAction.equals(primarySplit.sortAction)) {
+    primarySplit = primarySplit.changeSortAction(sortAction);
     autoChanged = true;
   }
 
   // Fix time limit
-  if (bucketedSplit.limitAction && bucketedDimension.kind === 'time') {
-    bucketedSplit = bucketedSplit.changeLimitAction(null);
+  if (primarySplit.limitAction && primaryDimension.kind === 'time') {
+    primarySplit = primarySplit.changeLimitAction(null);
     autoChanged = true;
   }
 
@@ -96,16 +97,58 @@ function adjustTwoSplits(bucketedSplit: SplitCombine, colorSplit: SplitCombine, 
     colors = Colors.fromLimit(colorSplitDimension.name, 5);
     autoChanged = true;
   }
-
-  return {
-    score: (score: (bucketedSplit: SplitCombine, colorSplit: SplitCombine, timeDimension: Dimension, colors: Colors, autoChanged: boolean) => Resolve) => {
-      return score(bucketedSplit, colorSplit, bucketedDimension, colors, autoChanged);
-    }
-  };
+  return resolveTwoSplits({ primarySplit, colorSplit, primaryDimension, colors, autoChanged });
 }
+
+interface LineChartState {
+  primarySplit: SplitCombine;
+  colorSplit: SplitCombine;
+  primaryDimension: Dimension;
+  colors: Colors;
+  autoChanged: Boolean;
+}
+
+function resolveTwoSplits(state: LineChartState): Resolve {
+  const { primaryDimension, autoChanged, colorSplit, primarySplit, colors } = state;
+  let score = 4;
+  if (primaryDimension.canBucketByDefault()) score += 2;
+  if (primaryDimension.kind === 'time') score += 2;
+  if (!autoChanged) {
+    score += 2;
+    return Resolve.ready(score);
+  }
+  return Resolve.automatic(score, {
+    splits: new Splits(List([colorSplit, primarySplit])),
+    colors
+  });
+}
+
+interface TwoSplitCandidate {
+  primaryCandidate: SplitCombine;
+  colorCandidate: SplitCombine;
+  dimensions: List<Dimension>;
+  splits: Splits;
+}
+
+interface TwoSplitResult {
+  primarySplit: SplitCombine;
+  colorSplit: SplitCombine;
+}
+
+function ensureSplitOrder(candidate: TwoSplitCandidate): TwoSplitResult {
+  const { splits, dimensions, primaryCandidate, colorCandidate } = candidate;
+  if (splits.toArray().every((s) => s.isBucketed())) {
+    var timeSplit = List(splits.toArray()).find((s) => s.getDimension(dimensions).kind === 'time');
+    if (timeSplit && primaryCandidate !== timeSplit) {
+      return { primarySplit: timeSplit, colorSplit: primaryCandidate };
+    }
+  }
+  return { primarySplit: primaryCandidate, colorSplit: colorCandidate};
+}
+
 var handler = CircumstancesHandler.EMPTY()
 
-  .when(CircumstancesHandler.noSplits())
+  .when((splits: Splits) => !(splits.toArray().some((s) => s.isBucketed())))
   .then((splits: Splits, dataCube: DataCube) => {
     let bucketedDimensions = dataCube.dimensions.filter((d) => d.canBucketByDefault());
     return Resolve.manual(3, 'This visualization requires a continuous dimension split',
@@ -120,11 +163,8 @@ var handler = CircumstancesHandler.EMPTY()
     );
   })
 
-  // .when((splits: Splits, dataCube: DataCube) => !(splits.toArray().some((s) => s.isBucketed())))
-  // .then(() => Resolve.NEVER)
-
-  .when((splits: Splits, dataCube: DataCube) => {
-    return splits.toArray().length === 1 && splits.first().isBucketed();
+  .when((splits: Splits) => {
+    return splits.hasSplitsLength(1) && splits.first().isBucketed();
   })
   .then((splits: Splits, dataCube: DataCube, colors: Colors, current: boolean) => {
     return adjustSingleSplit(splits, dataCube, colors)
@@ -141,74 +181,32 @@ var handler = CircumstancesHandler.EMPTY()
     });
   })
 
-  .when((splits: Splits, dataCube: DataCube) => {
-      let splitsArray = splits.toArray();
-      if (splitsArray.length !== 2) return false;
-      let firstSplit = splitsArray[0];
-      return firstSplit.isBucketed();
-  })
+  .when((splits: Splits) => splits.length() === 2 && splits.first().isBucketed())
   .then((splits: Splits, dataCube: DataCube, colors: Colors) => {
-    let primarySplit = splits.get(0);
-    let colorSplit = splits.get(1);
-    if (splits.toArray().every((s) => s.isBucketed())) { // if all splits bucketed, make sure time is primary
-      var timeSplit = List(splits.toArray()).find((s) => s.getDimension(dataCube.dimensions).kind === 'time');
-      if (timeSplit && primarySplit !== timeSplit) {
-        let nonTimeSplit = primarySplit;
-        primarySplit = timeSplit;
-        colorSplit = nonTimeSplit;
-      }
-    }
-    return adjustTwoSplits(primarySplit, colorSplit, dataCube, colors)
-      .score((primarySplit: SplitCombine, colorSplit: SplitCombine, primaryDimension: Dimension, colors: Colors, autoChanged: boolean) => {
-        let score = 4;
-        if (primaryDimension.canBucketByDefault()) score += 2;
-        if (primaryDimension.kind === 'time') score += 2;
-        if (!autoChanged) {
-          score += 2;
-          return Resolve.ready(score);
-        }
-        return Resolve.automatic(score, {
-          splits: new Splits(List([colorSplit, primarySplit])),
-          colors
-        });
-      });
+    let primaryCandidate = splits.get(0);
+    let colorCandidate = splits.get(1);
+    const { dimensions } = dataCube;
+    const { primarySplit, colorSplit } = ensureSplitOrder({ primaryCandidate, colorCandidate, splits, dimensions });
+    return handleTwoSplits(primarySplit, colorSplit, dataCube, colors);
   })
 
-  .when((splits: Splits, dataCube: DataCube) => {
-    var splitsArray = splits.toArray();
-    if (splitsArray.length !== 2) return false;
-    let secondSplit = splitsArray[1];
-    return secondSplit.isBucketed();
-  })
+  .when((splits: Splits) => splits.length() === 2 && splits.get(1).isBucketed())
   .then((splits: Splits, dataCube: DataCube, colors: Colors) => {
-    var timeSplit = splits.get(1);
-    let colorSplit = splits.get(0);
-    return adjustTwoSplits(timeSplit, colorSplit, dataCube, colors)
-      .score((secondSplit: SplitCombine, colorSplit: SplitCombine, primaryDimension: Dimension, colors: Colors, autoChanged: boolean) => {
-        let score = 4;
-        if (primaryDimension.canBucketByDefault()) score += 2;
-        if (primaryDimension.kind === 'time') score += 2;
-        if (!autoChanged) {
-          score += 2;
-          return Resolve.ready(score);
-        }
-        return Resolve.automatic(score, {
-          splits: new Splits(List([colorSplit, secondSplit])),
-          colors
-        });
-      });
+    var primaryCandidate = splits.get(1);
+    let colorCandidate = splits.get(0);
+    const { dimensions } = dataCube;
+    const { primarySplit, colorSplit } = ensureSplitOrder({ primaryCandidate, colorCandidate, splits, dimensions });
+    return handleTwoSplits(primarySplit, colorSplit, dataCube, colors);
   })
 
-  .when((splits: Splits, dataCube: DataCube) => {
-    return splits.toArray().every((s) => s.isBucketed());
-  })
-  .then((splits: Splits, dataCube: DataCube) => {
-    let timeSplit = splits.toArray().filter((split) => split.bucketAction !== null)[0];
+  .when((splits: Splits) => splits.toArray().some((s) => s.isBucketed()))
+  .then((splits: Splits) => {
+    let firstBucketableSplit = splits.toArray().filter((split) => split.isBucketed())[0];
     return Resolve.manual(3, 'Too many splits on the line chart', [
       {
-        description: `Remove all but the first split`,
+        description: `Remove all but the first bucketed split`,
         adjustment: {
-          splits: Splits.fromSplitCombine(timeSplit)
+          splits: Splits.fromSplitCombine(firstBucketableSplit)
         }
       }
     ]);

@@ -151,6 +151,10 @@ export class Splits implements Instance<SplitsValue, SplitsJS> {
     return this.splitCombines.first();
   }
 
+  public hasSplitsLength(n: number) {
+    return this.toArray().length === n;
+  }
+
   public last(): SplitCombine {
     return this.splitCombines.last();
   }
@@ -179,7 +183,7 @@ export class Splits implements Instance<SplitsValue, SplitsJS> {
   public removeBucketingFrom(expressions: Expression[]) {
     var changed = false;
     var newSplitCombines = <List<SplitCombine>>this.splitCombines.map((splitCombine) => {
-      if (!splitCombine.bucketAction) return splitCombine;
+      if (!splitCombine.isBucketed()) return splitCombine;
       var splitCombineExpression = splitCombine.expression;
       if (expressions.every(ex => !ex.equals(splitCombineExpression))) return splitCombine;
 
