@@ -665,9 +665,10 @@ export class Essence implements Instance<EssenceValue, EssenceJS> {
     return this.changeFilter(filter.getSpecificFilter(timekeeper.now(), dataCube.getMaxTime(timekeeper), timezone));
   }
 
-  public changeSplits(splits: Splits, strategy: VisStrategy): Essence {
+  public changeSplits(splits: Splits, strategy: VisStrategy, fromClick?: boolean): Essence {
     var { visualizations, dataCube, visualization, visResolve, filter, colors } = this;
-    splits = splits.updateWithFilter(filter, dataCube.dimensions);
+
+    splits = splits.updateWithFilter(filter, dataCube.dimensions, fromClick);
 
     // If in manual mode stay there, keep the vis regardless of suggested strategy
     if (visResolve.isManual()) {

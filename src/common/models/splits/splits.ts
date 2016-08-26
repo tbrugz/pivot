@@ -190,7 +190,7 @@ export class Splits implements Instance<SplitsValue, SplitsJS> {
     return changed ? new Splits(newSplitCombines) : this;
   }
 
-  public updateWithFilter(filter: Filter, dimensions: List<Dimension>): Splits {
+  public updateWithFilter(filter: Filter, dimensions: List<Dimension>, fromClick?: boolean): Splits {
     if (filter.isRelative()) {
       // Make specific
       filter = filter.getSpecificFilter(Timekeeper.globalNow(), Timekeeper.globalNow(), Timezone.UTC);
@@ -198,7 +198,7 @@ export class Splits implements Instance<SplitsValue, SplitsJS> {
 
     var changed = false;
     var newSplitCombines = <List<SplitCombine>>this.splitCombines.map((splitCombine) => {
-      if (splitCombine.bucketAction) return splitCombine;
+      if (splitCombine.bucketAction || fromClick) return splitCombine;
 
       var splitExpression = splitCombine.expression;
       var splitDimension = dimensions.find(d => splitExpression.equals(d.expression));
