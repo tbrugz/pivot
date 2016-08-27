@@ -1,7 +1,7 @@
 import { BaseImmutable, Property, isInstanceOf } from 'immutable-class';
 
 
-export type Location = 'file' | 'mysql' | 'postgres';
+export type Location = 'file' | 'mysql' | 'postgres' | 'clickhouse';
 export type Format = 'json' | 'yaml';
 
 export interface SettingsLocationValue {
@@ -21,7 +21,7 @@ export interface SettingsLocationJS {
 }
 
 export class SettingsLocation extends BaseImmutable<SettingsLocationValue, SettingsLocationJS> {
-  static LOCATION_VALUES: Location[] = ['file', 'mysql', 'postgres'];
+  static LOCATION_VALUES: Location[] = ['file', 'mysql', 'postgres', 'clickhouse'];
   static DEFAULT_FORMAT: Format = 'json';
   static FORMAT_VALUES: Format[] = ['json', 'yaml'];
 
