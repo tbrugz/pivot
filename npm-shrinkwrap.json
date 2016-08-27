@@ -790,6 +790,11 @@
       "from": "postgres-interval@>=1.0.0 <1.1.0",
       "resolved": "https://registry.npmjs.org/postgres-interval/-/postgres-interval-1.0.2.tgz"
     },
+    "plywood-clickhouse-requester": {
+      "version": "1.0.0",
+      "from": "plywood-clickhouse-requester@1.0.0",
+      "resolved": "https://registry.npmjs.org/plywood-clickhouse-requester/-/plywood-clickhouse-requester-1.0.0.tgz"
+    },
     "process-nextick-args": {
       "version": "1.0.7",
       "from": "process-nextick-args@>=1.0.6 <1.1.0",
