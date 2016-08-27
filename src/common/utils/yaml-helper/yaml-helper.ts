@@ -128,6 +128,7 @@ export function clusterToYAML(cluster: Cluster, withComments: boolean): string[]
 
     case 'postgres':
     case 'mysql':
+    case 'clickhouse':
       props
         .add('database')
         .add('user')
