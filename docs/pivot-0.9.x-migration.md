@@ -60,7 +60,7 @@ Thus in `your_config.yaml` you can set:
 # New style config
 clusters:
   - name: druid
-    type: druid # can be druid, postgres, or mysql
+    type: druid # can be druid, postgres, mysql or clickhouse
     host: "%{DRUID_OVERRIDE}%"
     timeout: 30000
     sourceListScan: auto
