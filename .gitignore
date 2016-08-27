@@ -15,3 +15,5 @@
 /config-test.yaml
 /*.sublime-*
 /dont-commit-*
+.*.un*
+.*.sw*
