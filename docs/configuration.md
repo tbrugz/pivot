@@ -77,7 +77,7 @@ Each cluster has the following properties:
 
 The name of the cluster (to be referenced later from the data cube)
 
-**type** ('druid' | 'mysql' | 'postgres')
+**type** ('druid' | 'mysql' | 'postgres' | 'clickhouse')
 
 The database type of the cluster
 
@@ -130,7 +130,7 @@ The request decorator module filepath to load.
 
 Options passed to the request decorator module
 
-### Postgres + MySQL specific
+### Postgres + MySQL + ClickHouse specific
 
 **database** (string)
 
