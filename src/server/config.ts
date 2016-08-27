@@ -84,6 +84,7 @@ Data connection options:
   -d, --druid <host>           The Druid broker node to connect to
       --postgres <host>        The Postgres cluster to connect to
       --mysql <host>           The MySQL cluster to connect to
+      --clickhouse <host>      The ClickHouse cluster to connect to
 
       --user <string>          The cluster 'user' (if needed)
       --password <string>      The cluster 'password' (if needed)
@@ -118,6 +119,7 @@ function parseArgs() {
       "druid": String,
       "postgres": String,
       "mysql": String,
+      "clickhouse": String,
 
       "user": String,
       "password": String,
@@ -149,7 +151,7 @@ if (parsedArgs['example']) {
   parsedArgs['examples'] = true;
 }
 
-const SETTINGS_INPUTS = ['config', 'examples', 'file', 'druid', 'postgres', 'mysql'];
+const SETTINGS_INPUTS = ['config', 'examples', 'file', 'druid', 'postgres', 'mysql', 'clickhouse'];
 
 var numSettingsInputs = arraySum(SETTINGS_INPUTS.map((input) => zeroOne(parsedArgs[input])));
 
@@ -258,7 +260,7 @@ if (START_SERVER) {
 
 // --- Location -------------------------------
 
-const CLUSTER_TYPES: SupportedType[] = ['druid', 'postgres', 'mysql'];
+const CLUSTER_TYPES: SupportedType[] = ['druid', 'postgres', 'mysql', 'clickhouse'];
 
 var settingsStore: SettingsStore = null;
 
@@ -281,6 +283,9 @@ if (serverSettingsFilePath) {
         //break;
 
       case 'postgres':
+        throw new Error('todo');
+
+      case 'clickhouse':
         throw new Error('todo');
 
       default:
