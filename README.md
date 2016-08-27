@@ -136,7 +136,7 @@ Running `gulp watch` will build the project and start all the automated watchers
 
 - Exclusion filters
 - Full support of Druid 0.9.1
-- Pivot can connect to multiple clusters, also Postgres and MySQL
+- Pivot can connect to multiple clusters, also Postgres, MySQL and ClickHouse
 - Continuous dimension filtering and splitting
 - Support for Druid Theta sketches (for countDistinct())
 - Horizontal bars in Table
