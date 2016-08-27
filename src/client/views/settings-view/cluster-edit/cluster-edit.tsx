@@ -124,7 +124,7 @@ export class ClusterEdit extends React.Component<ClusterEditProps, ClusterEditSt
     var makeTextInput = ImmutableInput.simpleGenerator(newInstance, this.delegate.onChange);
     var makeDropDownInput = ImmutableDropdown.simpleGenerator(newInstance, this.delegate.onChange);
 
-    var needsAuth = ['mysql', 'postgres'].indexOf(newInstance.type) > -1;
+    var needsAuth = ['mysql', 'postgres', 'clickhouse'].indexOf(newInstance.type) > -1;
 
     return <form className="general vertical">
       {makeLabel('title')}
