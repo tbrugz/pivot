@@ -184,7 +184,7 @@ export const CLUSTER = {
     description: 'The request decorator module filepath to load.'
   },
 
-  // PostGres + MySQL specific
+  // PostGres + MySQL + ClickHouse specific
   database: {
     label: 'Database',
     description: 'The database to which to connect to.'
